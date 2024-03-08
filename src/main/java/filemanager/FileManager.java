@@ -5,26 +5,45 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.InputMismatchException;
+import java.util.Objects;
 import java.util.Scanner;
+
+import static filemanager.constant.Option.*;
 
 public class FileManager {
 
     private String rootPath;
     private String substring;
-    private int countRepeat = 0;
-    private int countF = 0;
-    private int countD = 0;
     private int option;
+    private int countDeletedFiles = 0;
+    private int countDeletedDirs = 0;
 
     public void run() {
-        menu();
-        option = validationOption();
-        if (option != 7) {
+        validationOption();
+        if (option != EXIT) {
             getData();
             switcher();
         } else {
             System.out.println("Canceled");
         }
+    }
+
+    private void validationOption() {
+        option = -1;
+
+        while (isNotInInterval(option)) {
+            menu();
+            try {
+                option = new Scanner(System.in).nextInt();
+            } catch (InputMismatchException e) {
+                System.out.println();
+            }
+        }
+    }
+
+    private boolean isNotInInterval(int option) {
+        return option < 1 || option > 7;
     }
 
     private void menu() {
@@ -47,36 +66,32 @@ public class FileManager {
 
     private void switcher() {
         File root = new File(rootPath + File.separator);
-        File file;
+
         switch (option) {
-            case 1:
+            case REMOVE_SUBSTRING_IN_FILE_AND_DIR:
                 removeSubstringFromNameFileAndDir(root, substring);
-                System.out.printf("%s %s %s %d %s", "Removed substring", substring, "in", countF, "files");
+                System.out.printf("%s %s %s %d %s", "Removed substring", substring, "in", countDeletedFiles, "files");
                 break;
-            case 2:
+            case REMOVE_FILE_WITH_SUBSTRING:
                 removeFileWithSubstring(root, substring);
-                System.out.printf("%s %d %s", "Removed", countF, "files");
+                System.out.printf("%s %d %s", "Removed", countDeletedFiles, "files");
                 break;
-            case 3:
+            case REMOVE_DIR_WITH_SUBSTRING:
                 removeDirWithSubstring(root, substring);
-                System.out.printf("%s %d %s %d %s", "Removed", countD, "directories and", countF, "files");
+                System.out.printf("%s %d %s %d %s", "Removed", countDeletedDirs, "directories and", countDeletedFiles, "files");
                 break;
-            case 4, 5:
-                if ((file = createNewDir()) == null) {
-                    System.out.println("Incorrect path. Try again");
-                    file = createNewDir();
-                } else {
-                    try {
-                        copyOrMoveFileInNewPlace(root, substring, file);
-                    } catch (IOException e) {
-                        System.out.println(e.getMessage());
-                    }
-                    System.out.printf("%s %d %s", "Copied", countF, "files");
+            case MOVE_FILE, COPY_FILE:
+                try {
+                    File file = createNewDir();
+                    copyOrMoveFileInNewPlace(root, substring, file);
+                } catch (IOException e) {
+                    System.out.println(e.getMessage());
                 }
+                System.out.printf("%s %d %s", "Copied", countDeletedFiles, "files");
                 break;
-            case 6:
+            case REMOVE_FILE_WITH_EXTENSION:
                 removeFilesWithExtension(root, substring);
-                System.out.printf("%s %d %s %s", "Removed", countF, "files with extension", substring);
+                System.out.printf("%s %d %s %s", "Removed", countDeletedFiles, "files with extension", substring);
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + option);
@@ -91,71 +106,51 @@ public class FileManager {
                     if (file.isDirectory()) {
                         removeSubstringFromNameFileAndDir(file, substring);
                     }
-                    if (file.getName().toLowerCase().contains(substring.toLowerCase())) {
+                    if (isFileContainsString(substring, file)) {
                         rename(file, substring);
-                        countF++;
+                        countDeletedFiles++;
                     }
                 }
             }
         }
     }
 
-    private int validationOption() {
-        Scanner sc = new Scanner(System.in);
-        int result = -1;
-        do {
-            try {
-                result = Integer.parseInt(sc.nextLine());
-                if (result < 1 || result > 7) {
-                    System.out.println("Incorrect option");
-                }
-            } catch (IllegalArgumentException e) {
-                System.out.println("Incorrect data");
-            }
-        } while (result < 1 || result > 7);
-        return result;
+    private boolean isFileContainsString(String substring, File file) {
+        return file.getName().toLowerCase().contains(substring.toLowerCase());
     }
 
-    private File createNewDir() {
-        System.out.println("new path for files");
-        String newPath = new Scanner(System.in).nextLine();
-        File directory = new File(newPath);
-        if (!directory.exists()) {
-            directory.mkdirs();
-        } else {
-            directory = null;
-        }
-        return directory;
+    private void rename(File file, String trigger) {
+        System.out.println("Rename " + file.getAbsolutePath());
+        File newFile = new File(file.getParent() + File.separator + getName(file.getName(), trigger));
+        file.renameTo(newFile);
     }
 
-    private void copyOrMoveFileInNewPlace(File rootFile, String substring, File target) throws IOException {
+    private String getName(String name, String trigger) {
+        int start = name.indexOf(trigger);
+        int end = start + trigger.length();
+
+        return name.substring(0, start) + name.substring(end);
+    }
+
+    private void removeFileWithSubstring(File rootFile, String substring) {
         if (rootFile.isDirectory()) {
             File[] dirFiles = rootFile.listFiles();
             if (dirFiles != null) {
                 for (File file : dirFiles) {
                     if (file.isDirectory()) {
-                        copyOrMoveFileInNewPlace(file, substring, target);
+                        removeFileWithSubstring(file, substring);
                     }
-                    if (file.getName().toLowerCase().contains(substring.toLowerCase())) {
-                        variable(substring, target, file);
+                    if (file.isFile() && isFileContainsString(substring, file)) {
+                        if (file.delete()) {
+                            countDeletedFiles++;
+                            System.out.println("File removed " + file.getAbsolutePath());
+                        } else {
+                            System.out.println("File didn't remove");
+                        }
                     }
                 }
             }
         }
-    }
-
-    private void variable(String substring, File target, File file) throws IOException {
-        String from = file.getAbsolutePath();
-        String to = target.getAbsolutePath() + File.separator + file.getName();
-        if (new File(to).exists()) {
-            to = target.getAbsolutePath() + File.separator + countRepeat++ + file.getName();
-        }
-        if (option == 4) {
-            Files.move(Paths.get(from), Paths.get(to), StandardCopyOption.REPLACE_EXISTING);
-        } else if (option == 5) {
-            Files.copy(file.toPath(), new File(to).toPath());
-        }
-        countF++;
     }
 
     private void removeDirWithSubstring(File rootFile, String substring) {
@@ -166,10 +161,9 @@ public class FileManager {
                     if (dir.isDirectory()) {
                         removeDirWithSubstring(dir, substring);
                     }
-                    if (dir.isDirectory() && dir.getName().toLowerCase().contains(substring.toLowerCase())) {
-                        boolean result = dir.delete();
-                        if (result) {
-                            countD++;
+                    if (dir.isDirectory() && isFileContainsString(substring, dir)) {
+                        if (dir.delete()) {
+                            countDeletedDirs++;
                             System.out.println("Directory removed " + dir.getAbsolutePath());
                         } else {
                             recursiveDelete(dir);
@@ -183,6 +177,7 @@ public class FileManager {
     private void recursiveDelete(File file) {
         if (!file.exists())
             return;
+
         if (file.isDirectory()) {
             for (File f : file.listFiles()) {
                 recursiveDelete(f);
@@ -190,57 +185,65 @@ public class FileManager {
         }
         if (file.isDirectory()) {
             file.delete();
-            countD++;
+            countDeletedDirs++;
         }
         if (file.isFile()) {
             file.delete();
-            countF++;
+            countDeletedFiles++;
         }
+
         System.out.println("Deleted file/folder: " + file.getAbsolutePath());
     }
 
-    private void removeFileWithSubstring(File rootFile, String substring) {
+    private File createNewDir() {
+        System.out.println("new path to directory for files");
+        String newPath = new Scanner(System.in).nextLine();
+        File directory = new File(newPath);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+        return directory;
+    }
+
+    private void copyOrMoveFileInNewPlace(File rootFile, String substring, File target) throws IOException {
         if (rootFile.isDirectory()) {
             File[] dirFiles = rootFile.listFiles();
             if (dirFiles != null) {
                 for (File file : dirFiles) {
                     if (file.isDirectory()) {
-                        removeFileWithSubstring(file, substring);
+                        copyOrMoveFileInNewPlace(file, substring, target);
                     }
-                    if (file.isFile() && file.getName().toLowerCase().contains(substring.toLowerCase())) {
-                        if (file.delete()) {
-                            countF++;
-                            System.out.println("File removed " + file.getAbsolutePath());
-                        } else {
-                            System.out.println("File didn't remove");
-                        }
+                    if (isFileContainsString(substring, file)) {
+                        variable(target, file);
                     }
                 }
             }
         }
     }
 
+    private void variable(File target, File file) throws IOException {
+        String from = file.getAbsolutePath();
+        String to = target.getAbsolutePath() + File.separator + file.getName();
 
+        if (new File(to).exists()) {
+            return;
+        }
 
-    private void rename(File file, String trigger) {
-        System.out.println("Rename " + file.getAbsolutePath());
-        File file2 = new File(file.getParent() + File.separator + getName(file.getName(), trigger));
-        file.renameTo(file2);
-    }
-
-    private String getName(String name, String trigger) {
-        int start = name.indexOf(trigger);
-        int end = start + trigger.length();
-        return name.substring(0, start) + name.substring(end);
+        if (option == 4) {
+            Files.move(Paths.get(from), Paths.get(to), StandardCopyOption.REPLACE_EXISTING);
+        }
+        if (option == 5) {
+            Files.copy(file.toPath(), new File(to).toPath());
+        }
+        countDeletedFiles++;
     }
 
     public void removeFilesWithExtension(File rootFile, String extension) {
         if (rootFile.isDirectory()) {
-            File[] files = rootFile.listFiles();
-            for (File file : files) {
+            for (File file : Objects.requireNonNull(rootFile.listFiles())) {
                 if (file.getName().endsWith(extension)) {
                     file.delete();
-                    countF++;
+                    countDeletedFiles++;
                 }
             }
         }
