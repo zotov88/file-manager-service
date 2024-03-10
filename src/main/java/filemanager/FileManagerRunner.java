@@ -1,6 +1,6 @@
 package filemanager;
 
-import filemanager.FileManager;
+import filemanager.service.FileManager;
 
 public class FileManagerRunner {
     public static void main(String[] args) {
