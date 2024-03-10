@@ -1,4 +1,4 @@
-package filemanager.service;
+package filemanager.servicex;
 
 import java.io.File;
 import java.io.IOException;
