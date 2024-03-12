@@ -1,47 +1,39 @@
 package filemanager.service;
 
+import filemanager.util.Validator;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.InputMismatchException;
 import java.util.Objects;
 import java.util.Scanner;
 
-import static filemanager.constant.Option.*;
+import static filemanager.constant.OptionConst.MainOption.*;
 
 public class FileManager {
 
+    private final Validator validator;
     private File root;
     private String substring;
-    private int option = -1;
+    private int options;
     private int count = 0;
     private int countFiles = 0;
     private int countDirs = 0;
 
+    public FileManager(Validator validator) {
+        this.validator = validator;
+    }
+
     public void run() {
-        validationOption();
-        getData();
-        validateRootPath();
-        if (option != EXIT) {
+        options = validator.validationOption();
+
+        if (options != EXIT) {
+            getData();
+            validator.validateRootPath(root);
             switcher();
         }
-    }
-
-    private void validationOption() {
-        while (isNotInInterval(option)) {
-            System.out.println(MENU);
-            try {
-                option = new Scanner(System.in).nextInt();
-            } catch (InputMismatchException e) {
-                System.out.println();
-            }
-        }
-    }
-
-    private boolean isNotInInterval(int option) {
-        return option < REMOVE_SUBSTRING_IN_FILE_AND_DIR || option > EXIT;
     }
 
     private void getData() {
@@ -55,19 +47,12 @@ public class FileManager {
         }
     }
 
-    private void validateRootPath() {
-        if (!root.isDirectory()) {
-            System.out.println(NOT_DIRECTORY);
-            System.exit(0);
-        }
-    }
-
     private boolean isNeedGetSubstring() {
-        return option != COUNT_OF_FILES_AND_DIRECTORIES;
+        return options != COUNT_OF_FILES_AND_DIRECTORIES;
     }
 
     private void switcher() {
-        switch (option) {
+        switch (options) {
             case REMOVE_SUBSTRING_IN_FILE_AND_DIR:
                 removeSubstringFromNameFileAndDir(root, substring);
                 System.out.printf("%s %s %s %d %s\n", "Removed substring", substring, "in", countFiles, "files.");
@@ -106,7 +91,7 @@ public class FileManager {
                 System.out.printf("%s %s: %d\n", "Count of directories in path ", root, count);
                 break;
             default:
-                throw new IllegalStateException("Unexpected value: " + option);
+                throw new IllegalStateException("Unexpected value: " + options);
         }
     }
 
@@ -221,10 +206,10 @@ public class FileManager {
         if (new File(to).exists()) {
             return;
         }
-        if (option == MOVE_FILE) {
+        if (options == MOVE_FILE) {
             Files.move(Paths.get(from), Paths.get(to), StandardCopyOption.REPLACE_EXISTING);
         }
-        if (option == COPY_FILE) {
+        if (options == COPY_FILE) {
             Files.copy(file.toPath(), new File(to).toPath());
         }
         countFiles++;
