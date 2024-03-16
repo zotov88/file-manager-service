@@ -10,7 +10,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import java.util.Scanner;
 
-import static filemanager.constant.OptionConst.MainOption.*;
+import static filemanager.constant.Option.MainOption.*;
 
 public class FileManager {
 

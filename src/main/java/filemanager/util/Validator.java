@@ -4,8 +4,8 @@ import java.io.File;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
-import static filemanager.constant.OptionConst.*;
-import static filemanager.constant.OptionConst.MainOption.*;
+import static filemanager.constant.Option.*;
+import static filemanager.constant.Option.MainOption.*;
 
 public class Validator {
 

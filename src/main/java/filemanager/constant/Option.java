@@ -3,7 +3,7 @@ package filemanager.constant;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class OptionConst {
+public class Option {
 
     public final String NOT_DIRECTORY = "this is not a directory";
 
