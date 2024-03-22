@@ -28,7 +28,6 @@ public class FileManager {
 
     public void run() {
         options = validator.validationOption();
-
         if (options != EXIT) {
             getData();
             validator.validateRootPath(root);
@@ -79,7 +78,7 @@ public class FileManager {
                 System.out.printf("%s %d %s %s\n", "Removed", countFiles, "files with extension.", substring);
                 break;
             case COUNT_OF_FILES_AND_DIRECTORIES:
-                countOfFiles(root);
+                countFiles(root);
                 System.out.printf("%s %d\n%s %d\n", "Count of files:", countFiles, "Count of directories:", countDirs);
                 break;
             case COUNT_OF_FILES_WITH_SUBSTRING:
@@ -224,11 +223,11 @@ public class FileManager {
         }
     }
 
-    private void countOfFiles(File root) {
+    private void countFiles(File root) {
         for (File file : Objects.requireNonNull(root.listFiles())) {
             if (file.isDirectory()) {
                 countDirs++;
-                countOfFiles(file);
+                countFiles(file);
             } else {
                 countFiles++;
             }
