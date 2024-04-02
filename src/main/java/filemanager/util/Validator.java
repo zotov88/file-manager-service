@@ -24,6 +24,21 @@ public class Validator {
         return option;
     }
 
+    public boolean validationRecursive() {
+        int result = -1;
+
+        while (result != 1 && result != 2) {
+            System.out.println(RECURSIVE_OPTION);
+            try {
+                result = new Scanner(System.in).nextInt();
+            } catch (InputMismatchException e) {
+                System.out.println();
+            }
+        }
+
+        return result == 1;
+    }
+
     private boolean isNotInInterval(int option) {
         return option < REMOVE_SUBSTRING_IN_FILE_AND_DIR || option > EXIT;
     }

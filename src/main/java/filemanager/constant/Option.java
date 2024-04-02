@@ -24,6 +24,12 @@ public class Option {
                         10 - exit
                         """;
 
+        public final String RECURSIVE_OPTION =
+                """ 
+                         1 - recursive
+                         2 - only this folder
+                        """;
+
         public final int REMOVE_SUBSTRING_IN_FILE_AND_DIR = 1;
         public final int REMOVE_FILE_WITH_SUBSTRING = 2;
         public final int REMOVE_DIR_WITH_SUBSTRING = 3;

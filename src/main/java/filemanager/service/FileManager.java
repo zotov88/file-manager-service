@@ -18,6 +18,7 @@ public class FileManager {
     private File root;
     private String substring;
     private int options;
+    private boolean isRecursive;
     private int count = 0;
     private int countFiles = 0;
     private int countDirs = 0;
@@ -29,10 +30,15 @@ public class FileManager {
     public void run() {
         options = validator.validationOption();
         if (options != EXIT) {
+            setRecursive();
             getData();
             validator.validateRootPath(root);
             switcher();
         }
+    }
+
+    private void setRecursive() {
+        isRecursive = validator.validationRecursive();
     }
 
     private void getData() {
@@ -96,7 +102,7 @@ public class FileManager {
 
     private void removeSubstringFromNameFileAndDir(File root, String substring) {
         for (File file : Objects.requireNonNull(root.listFiles())) {
-            if (file.isDirectory()) {
+            if (isRecursive && file.isDirectory()) {
                 removeSubstringFromNameFileAndDir(file, substring);
             }
             if (isFileContainsString(file, substring)) {
@@ -125,7 +131,7 @@ public class FileManager {
 
     private void removeFileWithSubstring(File root, String substring) {
         for (File file : Objects.requireNonNull(root.listFiles())) {
-            if (file.isDirectory()) {
+            if (isRecursive && file.isDirectory()) {
                 removeFileWithSubstring(file, substring);
             }
             if (file.isFile() && isFileContainsString(file, substring)) {
@@ -141,7 +147,7 @@ public class FileManager {
 
     private void removeDirWithSubstring(File root, String substring) {
         for (File dir : Objects.requireNonNull(root.listFiles())) {
-            if (dir.isDirectory()) {
+            if (isRecursive && dir.isDirectory()) {
                 removeDirWithSubstring(dir, substring);
             }
             if (dir.isDirectory() && isFileContainsString(dir, substring)) {
@@ -159,7 +165,7 @@ public class FileManager {
         if (!file.exists()) {
             return;
         }
-        if (file.isDirectory()) {
+        if (isRecursive && file.isDirectory()) {
             for (File f : Objects.requireNonNull(file.listFiles())) {
                 recursiveDelete(f);
             }
@@ -189,7 +195,7 @@ public class FileManager {
 
     private void copyOrMoveFile(File root, File newLocation, String substring) throws IOException {
         for (File file : Objects.requireNonNull(root.listFiles())) {
-            if (file.isDirectory()) {
+            if (isRecursive && file.isDirectory()) {
                 copyOrMoveFile(file, newLocation, substring);
             }
             if (isFileContainsString(file, substring)) {
@@ -225,7 +231,7 @@ public class FileManager {
 
     private void countFiles(File root) {
         for (File file : Objects.requireNonNull(root.listFiles())) {
-            if (file.isDirectory()) {
+            if (isRecursive && file.isDirectory()) {
                 countDirs++;
                 countFiles(file);
             } else {
