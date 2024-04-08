@@ -29,6 +29,7 @@ public class FileManager {
 
     public void run() {
         options = validator.validationOption();
+
         if (options != EXIT) {
             setRecursive();
             getData();
