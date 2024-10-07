@@ -7,7 +7,7 @@ import java.util.Scanner;
 import static filemanager.constant.Option.*;
 import static filemanager.constant.Option.MainOption.*;
 
-public class Validator {
+public final class Validator {
 
     public int validationOption() {
         int option = -1;
