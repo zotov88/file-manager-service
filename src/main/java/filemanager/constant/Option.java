@@ -12,6 +12,7 @@ public class Option {
 
         public final String MENU =
                 """
+                        --------------------------------------------------
                         1 - remove substring from filename and folder name
                         2 - remove file include substring
                         3 - remove directory include substring
@@ -22,12 +23,15 @@ public class Option {
                         8 - count of files with substring
                         9 - count of directories with substring
                         10 - exit
+                        --------------------------------------------------
                         """;
 
         public final String RECURSIVE_OPTION =
                 """ 
+                         --------------------------------------------------
                          1 - recursive
                          2 - only this folder
+                         --------------------------------------------------
                         """;
 
         public final int REMOVE_SUBSTRING_IN_FILE_AND_DIR = 1;
@@ -47,8 +51,10 @@ public class Option {
 
         public final String MENU =
                 """
+                        --------------------------------------------------
                         1 - process inside this folder
                         2 - process folders recursively
+                        --------------------------------------------------
                         """;
 
         public final int INSIDE_FOLDER = 1;

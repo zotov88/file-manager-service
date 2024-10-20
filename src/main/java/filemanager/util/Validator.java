@@ -4,10 +4,12 @@ import java.io.File;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
-import static filemanager.constant.Option.*;
 import static filemanager.constant.Option.MainOption.*;
+import static filemanager.constant.Option.*;
 
 public final class Validator {
+
+    private final static Scanner SCANNER = new Scanner(System.in);
 
     public int validationOption() {
         int option = -1;
@@ -15,7 +17,7 @@ public final class Validator {
         while (isNotInInterval(option)) {
             System.out.println(MENU);
             try {
-                option = new Scanner(System.in).nextInt();
+                option = SCANNER.nextInt();
             } catch (InputMismatchException e) {
                 System.out.println();
             }
@@ -30,9 +32,9 @@ public final class Validator {
         while (result != 1 && result != 2) {
             System.out.println(RECURSIVE_OPTION);
             try {
-                result = new Scanner(System.in).nextInt();
+                result = SCANNER.nextInt();
             } catch (InputMismatchException e) {
-                System.out.println();
+                System.out.println(e.getMessage());
             }
         }
 
@@ -43,10 +45,11 @@ public final class Validator {
         return option < REMOVE_SUBSTRING_IN_FILE_AND_DIR || option > EXIT;
     }
 
-    public void validateRootPath(File root) {
-        if (!root.isDirectory()) {
+    public boolean isDirectory(File root) {
+        boolean isDirectory = root.isDirectory();
+        if (!isDirectory) {
             System.out.println(NOT_DIRECTORY);
-            System.exit(0);
         }
+        return isDirectory;
     }
 }

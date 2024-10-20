@@ -14,7 +14,7 @@ import static filemanager.constant.Option.MainOption.*;
 
 public class FileManager {
 
-    private final Validator validator;
+    private final Validator validator = new Validator();
     private File root;
     private String substring;
     private int options;
@@ -23,18 +23,13 @@ public class FileManager {
     private int countFiles = 0;
     private int countDirs = 0;
 
-    public FileManager(Validator validator) {
-        this.validator = validator;
-    }
-
     public void run() {
-        options = validator.validationOption();
-
-        if (options != EXIT) {
+        while ((options = validator.validationOption()) != EXIT) {
             setRecursive();
             getData();
-            validator.validateRootPath(root);
-            switcher();
+            if (validator.isDirectory(root)) {
+                switcher();
+            }
         }
     }
 
@@ -48,7 +43,11 @@ public class FileManager {
         root = new File(sc.nextLine());
 
         if (isNeedGetSubstring()) {
-            System.out.println("Enter substring:");
+            if (options == 6) {
+                System.out.println("Enter extension:");
+            } else {
+                System.out.println("Enter substring:");
+            }
             substring = sc.nextLine();
         }
     }
@@ -60,29 +59,29 @@ public class FileManager {
     private void switcher() {
         switch (options) {
             case REMOVE_SUBSTRING_IN_FILE_AND_DIR:
-                removeSubstringFromNameFileAndDir(root, substring);
+                removeSubstringFromNameFileAndDir(root);
                 System.out.printf("%s %s %s %d %s\n", "Removed substring", substring, "in", countFiles, "files.");
                 break;
             case REMOVE_FILE_WITH_SUBSTRING:
-                removeFileWithSubstring(root, substring);
+                removeFileWithSubstring(root);
                 System.out.printf("%s %d %s\n", "Removed", countFiles, "files.");
                 break;
             case REMOVE_DIR_WITH_SUBSTRING:
-                removeDirWithSubstring(root, substring);
+                removeDirWithSubstring(root);
                 System.out.printf("%s %d %s %d %s\n", "Removed", countDirs, "directories and", countFiles, "files.");
                 break;
             case MOVE_FILE, COPY_FILE:
                 try {
                     File file = createNewDir();
-                    copyOrMoveFile(root, file, substring);
+                    copyOrMoveFile(root, file);
                 } catch (IOException e) {
                     System.out.println(e.getMessage());
                 }
                 System.out.printf("%s %d %s\n", "Processed", countFiles, "files.");
                 break;
             case REMOVE_FILE_WITH_EXTENSION:
-                removeFilesWithExtension(root, substring);
-                System.out.printf("%s %d %s %s\n", "Removed", countFiles, "files with extension.", substring);
+                removeFilesWithExtension(root);
+                System.out.printf("%s %d %s %s\n", "Removed", countFiles, "files with extension", substring);
                 break;
             case COUNT_OF_FILES_AND_DIRECTORIES:
                 countFiles(root);
@@ -101,41 +100,41 @@ public class FileManager {
         }
     }
 
-    private void removeSubstringFromNameFileAndDir(File root, String substring) {
+    private void removeSubstringFromNameFileAndDir(File root) {
         for (File file : Objects.requireNonNull(root.listFiles())) {
             if (isRecursive && file.isDirectory()) {
-                removeSubstringFromNameFileAndDir(file, substring);
+                removeSubstringFromNameFileAndDir(file);
             }
-            if (isFileContainsString(file, substring)) {
-                renameFile(file, substring);
+            if (isFileContainsString(file)) {
+                renameFile(file);
                 countFiles++;
             }
         }
     }
 
-    private boolean isFileContainsString(File file, String substring) {
+    private boolean isFileContainsString(File file) {
         return file.getName().length() > 1 && file.getName().toLowerCase().contains(substring.toLowerCase());
     }
 
-    private void renameFile(File file, String substring) {
+    private void renameFile(File file) {
         System.out.println("Rename " + file.getAbsolutePath());
-        File newFile = new File(file.getParent() + File.separator + getName(file.getName(), substring));
+        File newFile = new File(file.getParent() + File.separator + getName(file.getName()));
         file.renameTo(newFile);
     }
 
-    private String getName(String fileName, String substring) {
+    private String getName(String fileName) {
         int start = fileName.indexOf(substring);
         int end = start + substring.length();
 
         return fileName.substring(0, start) + fileName.substring(end);
     }
 
-    private void removeFileWithSubstring(File root, String substring) {
+    private void removeFileWithSubstring(File root) {
         for (File file : Objects.requireNonNull(root.listFiles())) {
             if (isRecursive && file.isDirectory()) {
-                removeFileWithSubstring(file, substring);
+                removeFileWithSubstring(file);
             }
-            if (file.isFile() && isFileContainsString(file, substring)) {
+            if (file.isFile() && isFileContainsString(file)) {
                 if (file.delete()) {
                     countFiles++;
                     System.out.println("File removed " + file.getAbsolutePath());
@@ -146,12 +145,12 @@ public class FileManager {
         }
     }
 
-    private void removeDirWithSubstring(File root, String substring) {
+    private void removeDirWithSubstring(File root) {
         for (File dir : Objects.requireNonNull(root.listFiles())) {
             if (isRecursive && dir.isDirectory()) {
-                removeDirWithSubstring(dir, substring);
+                removeDirWithSubstring(dir);
             }
-            if (dir.isDirectory() && isFileContainsString(dir, substring)) {
+            if (dir.isDirectory() && isFileContainsString(dir)) {
                 if (dir.delete()) {
                     countDirs++;
                     System.out.println("Directory removed " + dir.getAbsolutePath());
@@ -194,12 +193,12 @@ public class FileManager {
         return directory;
     }
 
-    private void copyOrMoveFile(File root, File newLocation, String substring) throws IOException {
+    private void copyOrMoveFile(File root, File newLocation) throws IOException {
         for (File file : Objects.requireNonNull(root.listFiles())) {
             if (isRecursive && file.isDirectory()) {
-                copyOrMoveFile(file, newLocation, substring);
+                copyOrMoveFile(file, newLocation);
             }
-            if (isFileContainsString(file, substring)) {
+            if (isFileContainsString(file)) {
                 processFile(file, newLocation);
             }
         }
@@ -221,9 +220,9 @@ public class FileManager {
         countFiles++;
     }
 
-    public void removeFilesWithExtension(File root, String extension) {
+    public void removeFilesWithExtension(File root) {
         for (File file : Objects.requireNonNull(root.listFiles())) {
-            if (file.getName().endsWith(extension)) {
+            if (file.getName().endsWith(substring)) {
                 file.delete();
                 countFiles++;
             }
